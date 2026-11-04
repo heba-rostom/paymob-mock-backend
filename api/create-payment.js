@@ -6,23 +6,19 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// استبدلي دي بالبيانات الحقيقية أو التجريبية بتاعتك من لوحة تحكم Paymob
-const PAYMOB_API_KEY = "YOUR_PAYMOB_API_KEY_HERE";
-const INTEGRATION_ID = YOUR_CARD_INTEGRATION_ID_HERE; // رقم صحيح (مثلاً 123456)
+const PAYMOB_API_KEY = process.env.PAYMOB_API_KEY;
+const INTEGRATION_ID = process.env.INTEGRATION_ID; 
 
-// الـ Endpoint اللي الفلاتر هيبعت لها الطلب
 app.post('/api/create-payment', async (req, res) => {
     try {
         const { amount, firstName, lastName, email, phone } = req.body;
-        const amountCents = Math.round(amount * 100); // تحويل المبلغ لقروش
+        const amountCents = Math.round(amount * 100); 
 
-        // 1. طلب الـ Auth Token من Paymob
         const authResponse = await axios.post('https://accept.paymob.com/api/auth/tokens', {
             api_key: PAYMOB_API_KEY
         });
         const authToken = authResponse.data.token;
 
-        // 2. طلب تسجيل الـ Order
         const orderResponse = await axios.post('https://accept.paymob.com/api/ecommerce/orders', {
             auth_token: authToken,
             delivery_needed: "false",
@@ -32,7 +28,6 @@ app.post('/api/create-payment', async (req, res) => {
         });
         const orderId = orderResponse.data.id;
 
-        // 3. طلب الـ Payment Key النهائي
         const paymentKeyResponse = await axios.post('https://accept.paymob.com/api/acceptance/payment_keys', {
             auth_token: authToken,
             amount_cents: amountCents.toString(),
@@ -53,15 +48,14 @@ app.post('/api/create-payment', async (req, res) => {
 
         const paymentKey = paymentKeyResponse.data.token;
 
-        // إرجاع الـ Payment Key لتطبيق الفلاتر
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             payment_key: paymentKey
         });
 
     } catch (error) {
-        console.error(error.response?.data || error.message);
-        res.status(500).json({
+        console.error("Paymob Error:", error.response?.data || error.message);
+        return res.status(500).json({
             success: false,
             message: "Payment initialization failed",
             error: error.response?.data || error.message
@@ -69,7 +63,4 @@ app.post('/api/create-payment', async (req, res) => {
     }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+module.exports = app;
