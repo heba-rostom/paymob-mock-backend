@@ -7,7 +7,7 @@ app.use(express.json());
 app.use(cors());
 
 const PAYMOB_API_KEY = process.env.PAYMOB_API_KEY;
-const INTEGRATION_ID = process.env.INTEGRATION_ID || "6038035"; 
+const INTEGRATION_ID = process.env.INTEGRATION_ID ? Number(process.env.INTEGRATION_ID) : 6038035; 
 
 app.post('/api/create-payment', async (req, res) => {
     try {
@@ -26,7 +26,7 @@ app.post('/api/create-payment', async (req, res) => {
             currency: "EGP",
             items: [
                 {
-                    name: "Test Item",
+                    name: "Service Item",
                     amount_cents: amountCents.toString(),
                     description: "Payment for services",
                     quantity: "1"
@@ -45,18 +45,18 @@ app.post('/api/create-payment', async (req, res) => {
                 last_name: lastName && lastName.trim() !== "" ? lastName : "Rostom",
                 email: email && email.trim() !== "" ? email : "heba@example.com",
                 phone_number: phone && phone.trim() !== "" ? phone : "+201006890773",
-                apartment: "8", 
-                floor: "4", 
-                street: "Tahrir Street",
-                building: "12", 
-                shipping_method: "PKG",
-                postal_code: "11511", 
+                apartment: "NA", 
+                floor: "NA", 
+                street: "NA",
+                building: "NA", 
+                shipping_method: "NA",
+                postal_code: "NA", 
                 city: "Cairo", 
                 country: "EG", 
                 state: "Cairo"
             },
             currency: "EGP",
-            integration_id: Number(INTEGRATION_ID) 
+            integration_id: INTEGRATION_ID 
         });
 
         const paymentKey = paymentKeyResponse.data.token;
