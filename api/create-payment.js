@@ -14,23 +14,27 @@ app.post('/api/create-payment', async (req, res) => {
         const { amount, firstName, lastName, email, phone } = req.body;
         const amountCents = Math.round(amount * 100); 
 
-        // 1. Authentication
         const authResponse = await axios.post('https://accept.paymob.com/api/auth/tokens', {
             api_key: PAYMOB_API_KEY
         });
         const authToken = authResponse.data.token;
 
-        // 2. Order Registration
         const orderResponse = await axios.post('https://accept.paymob.com/api/ecommerce/orders', {
             auth_token: authToken,
             delivery_needed: "false",
             amount_cents: amountCents.toString(),
             currency: "EGP",
-            items: []
+            items: [
+                {
+                    name: "Test Item",
+                    amount_cents: amountCents.toString(),
+                    description: "Payment for services",
+                    quantity: "1"
+                }
+            ]
         });
         const orderId = orderResponse.data.id;
 
-        // 3. Payment Key Generation
         const paymentKeyResponse = await axios.post('https://accept.paymob.com/api/acceptance/payment_keys', {
             auth_token: authToken,
             amount_cents: amountCents.toString(),
