@@ -7,18 +7,20 @@ app.use(express.json());
 app.use(cors());
 
 const PAYMOB_API_KEY = process.env.PAYMOB_API_KEY;
-const INTEGRATION_ID = process.env.INTEGRATION_ID; 
+const INTEGRATION_ID = process.env.INTEGRATION_ID || "6038035"; 
 
 app.post('/api/create-payment', async (req, res) => {
     try {
         const { amount, firstName, lastName, email, phone } = req.body;
         const amountCents = Math.round(amount * 100); 
 
+        // 1. Authentication
         const authResponse = await axios.post('https://accept.paymob.com/api/auth/tokens', {
             api_key: PAYMOB_API_KEY
         });
         const authToken = authResponse.data.token;
 
+        // 2. Order Registration
         const orderResponse = await axios.post('https://accept.paymob.com/api/ecommerce/orders', {
             auth_token: authToken,
             delivery_needed: "false",
@@ -28,22 +30,29 @@ app.post('/api/create-payment', async (req, res) => {
         });
         const orderId = orderResponse.data.id;
 
+        // 3. Payment Key Generation
         const paymentKeyResponse = await axios.post('https://accept.paymob.com/api/acceptance/payment_keys', {
             auth_token: authToken,
             amount_cents: amountCents.toString(),
             expiration: 3600,
             order_id: orderId,
             billing_data: {
-                first_name: firstName || "Test",
-                last_name: lastName || "User",
-                email: email || "test@example.com",
-                phone_number: phone || "+201012345678",
-                apartment: "NA", floor: "NA", street: "NA",
-                building: "NA", shipping_method: "NA",
-                postal_code: "NA", city: "NA", country: "EG", state: "NA"
+                first_name: firstName && firstName.trim() !== "" ? firstName : "Heba",
+                last_name: lastName && lastName.trim() !== "" ? lastName : "Rostom",
+                email: email && email.trim() !== "" ? email : "heba@example.com",
+                phone_number: phone && phone.trim() !== "" ? phone : "+201006890773",
+                apartment: "8", 
+                floor: "4", 
+                street: "Tahrir Street",
+                building: "12", 
+                shipping_method: "PKG",
+                postal_code: "11511", 
+                city: "Cairo", 
+                country: "EG", 
+                state: "Cairo"
             },
             currency: "EGP",
-            integration_id: INTEGRATION_ID
+            integration_id: Number(INTEGRATION_ID) 
         });
 
         const paymentKey = paymentKeyResponse.data.token;
